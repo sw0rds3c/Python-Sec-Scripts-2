@@ -1,0 +1,211 @@
+''' LIBRARY IMPORT SECTION '''
+import os                       # Python Standard Library : Operating System Methods
+import sys                      # Python Standard Library : System Methods
+import csv
+from datetime import datetime   # Python Standard Libary datetime method from Standard Library
+
+from PIL import Image
+from PIL.ExifTags import TAGS, GPSTAGS
+from prettytable import PrettyTable
+
+'''Functions'''
+def ExtractGPSDictionary(fileName):
+    ''' Function to Extract GPS Dictionary '''
+    try:
+        pilImage = Image.open(fileName)
+        exifData = pilImage._getexif()
+
+    except Exception:
+        # If exception occurs from PIL processing
+        # Report the 
+        return None, None
+
+    # Interate through the exifData
+    # Searching for GPS Tags
+
+    imageTimeStamp = "NA"
+    cameraModel = "NA"
+    cameraMake = "NA"
+    gpsData = False
+
+    gpsDictionary = {}
+
+    if exifData:
+
+        for tag, theValue in exifData.items():
+
+            # obtain the tag
+            tagValue = TAGS.get(tag, tag)
+            print(tagValue)
+            # Collect basic image data if available
+
+            if tagValue == 'DateTimeOriginal':
+                imageTimeStamp = exifData.get(tag).strip()
+
+            if tagValue == "Make":
+                cameraMake = exifData.get(tag).strip()
+
+            if tagValue == 'Model':
+                cameraModel = exifData.get(tag).strip()
+
+            # check the tag for GPS
+            if tagValue == "GPSInfo":
+
+                gpsData = True;
+
+                # Found it !
+                # Now create a Dictionary to hold the GPS Data
+
+                # Loop through the GPS Information
+                for curTag in theValue:
+                    gpsTag = GPSTAGS.get(curTag, curTag)
+                    gpsDictionary[gpsTag] = theValue[curTag]
+
+        basicExifData = [imageTimeStamp, cameraMake, cameraModel]    
+
+        return gpsDictionary, basicExifData
+
+    else:
+        return None, None
+
+# End ExtractGPSDictionary ============================
+def ExtractLatLon(gps):
+    ''' Function to Extract Lattitude and Longitude Values '''
+
+    # to perform the calcuation we need at least
+    # lat, lon, latRef and lonRef
+    
+    try:
+        latitude     = gps["GPSLatitude"]
+        latitudeRef  = gps["GPSLatitudeRef"]
+        longitude    = gps["GPSLongitude"]
+        longitudeRef = gps["GPSLongitudeRef"]
+
+        lat, lon = ConvertToDegreesV1(latitude, latitudeRef, longitude, longitudeRef)
+
+        gpsCoor = {"Lat": lat, "LatRef":latitudeRef, "Lon": lon, "LonRef": longitudeRef}
+
+        return gpsCoor
+
+    except Exception as err:
+        return None
+
+# End Extract Lat Lon ==============================================
+def ConvertToDegreesV1(lat, latRef, lon, lonRef):
+    
+    degrees = lat[0]
+    minutes = lat[1]
+    seconds = lat[2]
+    try:
+        seconds = float(seconds)
+    except:
+        seconds = 0.0
+
+    latDecimal = float ( (degrees +(minutes/60) + (seconds)/(60*60) ) )
+        
+    if latRef == 'S':
+        latDecimal = latDecimal*-1.0
+        
+    degrees = lon[0]
+    minutes = lon[1]
+    seconds = lon[2]
+    try:
+        seconds = float(seconds)
+    except:
+        seconds = 0.0
+    
+    lonDecimal = float ( (degrees +(minutes/60) + (seconds)/(60*60) ) )
+    
+    if lonRef == 'W':
+        lonDecimal = lonDecimal*-1.0
+    
+    return(latDecimal, lonDecimal)
+
+''' MAIN PROGRAM ENTRY SECTION '''
+
+def main():
+
+    print("\nExtract EXIF Data from JPEG Files\n")
+
+    print("Script Started", str(datetime.now()))    
+
+    #PROCESS EACH JPEG FILE SECTION
+    latLonList = []
+    # Result Table Heading
+    resultTable = PrettyTable(['File-Name', 'Lat','Lon', 'TimeStamp', 'Make', 'Model'])
+    #file path from user
+    path = input("\nEnter the path to the directory containing the jpeg files: ")
+
+    if os.path.exists(path):
+
+        # get the list of files in the directory
+        files = os.listdir(path)
+
+        # loop through the files in the directory
+        for file in files:
+
+            # check if the file is a jpeg file
+            if file.endswith(".jpg"):
+
+                # get the full path to the file
+                file_path = os.path.join(path, file)
+                
+                if os.path.isfile(file_path):
+                    gpsDictionary, exifList = ExtractGPSDictionary(file_path)
+                        
+                    if exifList:
+                        TS = exifList[0]
+                        MAKE = exifList[1]
+                        MODEL = exifList[2]
+                    else:
+                        TS = 'NA'
+                        MAKE = 'NA'
+                        MODEL = 'NA'
+            
+                    print("\nPhoto Details for:", file_path)
+                    print("-------------")
+                    print("TimeStamp:    ", TS)
+                    print("Camera Make:  ", MAKE)
+                    print("Camera Model: ", MODEL)
+                    
+                    if (gpsDictionary != None):
+            
+                        # Obtain the Lat Lon values from the gpsDictionary
+                        # Converted to degrees
+                        # The return value is a dictionary key value pairs
+            
+                        dCoor = ExtractLatLon(gpsDictionary)
+            
+                        print("\nGeo-Location Data")
+                        print("-----------------")
+            
+                        if dCoor:
+                            lat = dCoor.get("Lat")
+                            latRef = dCoor.get("LatRef")
+                            lon = dCoor.get("Lon")
+                            lonRef = dCoor.get("LonRef")
+                            
+                            if ( lat and lon and latRef and lonRef):
+                                print("Lattitude: ", '{:4.4f}'.format(lat))
+                                print("Longitude: ", '{:4.4f}'.format(lon), "\n")
+                                
+                                resultTable.add_row([file_path, lat, lon, exifList[0], exifList[1], exifList[2]])
+                                
+                            else:
+                                print("WARNING No GPS EXIF Data")
+                        else:
+                            print("WARNING No GPS EXIF Data")                    
+                    else:
+                        print("WARNING", " not a valid file", file_path)
+                        
+    # write the data to a csv file
+    with open('gps_data.csv', 'w', newline='') as fileOut:
+        fileOut.write(resultTable.get_csv_string())
+    
+    print("\nHere is the PrettyTable:\n", resultTable)
+    
+    print("\nScript Finished", str(datetime.now()), "\n")
+
+if __name__ == "__main__":
+    
+    main()
