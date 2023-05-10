@@ -1,0 +1,69 @@
+'''
+Mike Sword
+01/28/2023
+Week Two Assignment #3 - File Processing
+'''
+
+''' STANDARD LIBRARIES '''
+
+import os       # File System Methods
+import hashlib  # Python standard library hashlib
+
+''' PSEUDO CONSTANTS '''
+#Change to directory as required
+DIR = input("Enter Directory for File Processing: ")
+
+''' LOCAL FUNCTIONS '''
+fileList   = []
+fileHashes = {}
+
+#main
+for root, dirs, files in os.walk(DIR):
+
+    #test printing the Root, Dir, and Files in Dir
+    '''
+    # Print current Root directory
+    print('Root: ', root)
+    # Print current directory
+    print('Directories: ', dirs)
+    # Print files
+    print('Files: ', files, "\n") 
+    '''
+    
+    # Walks the path from top to bottom
+    # For each file, obtain the filename    
+    for fileName in files:
+        
+        path = os.path.join(root, fileName)
+        fullPath = os.path.abspath(path)
+        
+        #test printing the Full Path of the Files
+        '''
+        print('Full File Path is: ',fullPath, "\n")
+        '''
+        
+        #appends the file name to the pre-defined list
+        fileList.append(fileName)
+        
+        # Opens each file in read binary mode
+        with open(fullPath, 'rb') as targetFile:
+            
+            # Read the contents of the file and get the file hash
+            fileContents = targetFile.read()
+            md5Obj = hashlib.md5()
+            md5Obj.update(fileContents)
+            hexDigest = md5Obj.hexdigest()
+            
+            #appends the file's hash as the key and file's full path as the corresponding value
+            fileHashes[hexDigest] = fullPath
+
+#prints a list of each filename
+print("\n\n", "_"*40, "\n\nList of Each File: \n", "_"*40, "\n")
+for eachEntry in fileList:
+    print(eachEntry)  
+
+print("\n\n", "_"*40, "\n\nEach Files MD5 Hash and its Full Path: \n", "_"*40, "\n")
+for eachEntry in fileHashes:
+    print(eachEntry, "\n", fileHashes[eachEntry], "\n")
+    
+#complete
