@@ -1,0 +1,54 @@
+'''
+Mike Sword
+1/21/23
+Assignment #1
+'''
+
+'''
+Week One Assignment - Simple String Searching 
+'''
+
+excerpt = " Another one got caught today, it's all over the papers. Teenager\
+            Arrested in Computer Crime Scandal, Hacker Arrested after Bank Tampering\
+            Damn kids.  They're all alike"
+
+#converting excerpt to lowercase
+lowerExcerpt = excerpt.lower()
+print("The excerpt in lowercase is:\n",lowerExcerpt,"\n\n")
+
+#counting num of characters in excerpt
+excerptCharacters = len(excerpt)
+print("There are -->",str(excerptCharacters),"<-- actual characters in the previous excerpt including the whitspace\n\n")
+
+#counting num of words in excerpt
+excerptSplit = lowerExcerpt.split()
+'''
+print(excerptSplit, "\n\n")
+'''
+excerptWords = len(excerptSplit)
+print("There are -->",str(excerptWords),"<-- actual words in the previous excerpt\n\n")
+
+#sorting words from excerpt into alphabetical order
+excerptSplit.sort()
+print("The excerpt sorted in Alphanetical order is:\n",str(excerptSplit),"\n\n")
+
+#searching the excerpt for specific words and counting num of occurences
+word1 = 'scandal'
+word2 = 'arrested'
+word3 = 'er'
+word4 = 'good'
+word5 = 'tomorrow'
+
+word1_occurence = lowerExcerpt.count(word1)
+word2_occurence = lowerExcerpt.count(word2)
+word3_occurence = lowerExcerpt.count(word3)
+word4_occurence = lowerExcerpt.count(word4)
+word5_occurence = lowerExcerpt.count(word5)
+
+print("The word '", word1,"' appears in the excerpt ",word1_occurence," time(s)\n")
+print("The word '", word2,"' appears in the excerpt ",word2_occurence," time(s)\n")
+print("The word '", word3,"' appears in the excerpt ",word3_occurence," time(s)\n")
+print("The word '", word4,"' appears in the excerpt ",word4_occurence," time(s)\n")
+print("The word '", word5,"' appears in the excerpt ",word5_occurence," time(s)\n")
+
+##complete
