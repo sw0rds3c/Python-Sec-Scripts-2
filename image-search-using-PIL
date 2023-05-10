@@ -1,0 +1,45 @@
+'''
+Mike Sword
+02/11/2023
+Week Four Assignment #5 - Searching for Digital Images w/ Python and PIL
+'''
+
+''' Import Standard Libraries '''
+import os
+''' Import 3rd Party Libs '''
+from PIL import Image
+from prettytable import PrettyTable
+
+def identify_images(path):
+    # Check if the path exists and is a directory
+    if not os.path.isdir(path):
+        print("The path provided is not a valid directory.")
+        return
+
+    # Create a PrettyTable to store the results
+    resultTable = PrettyTable(["Image?", "File", "FileSize", "Ext", "Format", "Width", "Height", "Type"])
+
+    # Iterate through each file in the directory
+    for filename in os.listdir(path):
+        file_path = os.path.join(path, filename)
+
+        # Check if the file is an image
+        try:
+            with Image.open(file_path) as im:
+                file_size = os.path.getsize(file_path)
+                ext = os.path.splitext(filename)[1][1:]
+                format = im.format
+                width, height = im.size
+                image_type = im.mode
+                resultTable.add_row(["Yes", filename, file_size, ext, format, width, height, image_type])
+        except (IOError, SyntaxError):
+            resultTable.add_row(["No", filename, os.path.getsize(file_path), "N/A", "N/A", "N/A", "N/A", "N/A"])
+
+    print(resultTable)
+    
+def main():
+    path = input("Enter a directory path to search for Image Files within: ")
+    identify_images(path)
+
+if __name__ == "__main__":
+    main()
