@@ -1,0 +1,89 @@
+'''
+Mike Sword
+02/04/2023
+Week Three Assignment 4 - File Processing Object
+'''
+
+''' Import Standard Libraries '''
+import os
+import sys
+import time
+import csv
+from time import ctime
+from binascii import hexlify
+
+''' Import 3rd Party Libraries'''
+from hashing import HashFile            # HashFile.py need to be in the same folder as script
+from prettytable import PrettyTable     # py -3 -m pip install -U prettytable
+
+tbl = PrettyTable(['Path', 'FileSize', 'Hash', 'LastModified', 'FileHeader', 'Status', 'Error'])
+
+class FileProcessor:
+    ''' Class to Create User Dictionary'''
+
+    def __init__(self, fileName):
+        ''' initialize instance attributes'''
+        ''' Create object variables and Constants '''
+        
+        self.filePath         = fileName
+        self.lastModifiedTime = ""
+        self.fileSize         = 0
+        self.md5Hash          = ""
+        self.fileHeader       = ""
+        self.status           = ""
+        self.errorInfo        = ""
+        
+        try:
+            if not os.path.exists(self.filePath):
+                        self.status = "ERROR"
+                        self.errorInfo = "File not found"
+            else:
+                self.status = "OK"
+                self.fileSize = os.path.getsize(self.filePath)
+                timeResult = os.path.getmtime(self.filePath)
+                self.lastModifiedTime = time.ctime(timeResult)
+                self.md5Hash = HashFile(self.filePath)
+                with open(self.filePath, 'rb') as f:
+                    fileContent = f.read()
+                    self.fileHeader = hexlify(fileContent[:20])                
+                    
+        except Exception as e:
+            self.status = "ERROR"
+            self.errorInfo = str(e)        
+        
+    def GetFileMetaData(self):
+    
+        return {
+                    "FilePath": self.filePath,
+                    "FileSize": self.fileSize,
+                    "md5Hash": self.md5Hash,
+                    "LastModifiedTime": self.lastModifiedTime,
+                    "FileHeader": self.fileHeader,
+                    "status": self.status,
+                    "errorInfo": self.errorInfo        
+                }
+
+def main():
+    print("\n --->   CYBV473 Assignment #4 -- by: Mike Sword   <---\n")
+    dirPath = input("Enter a valid directory path to process the files from: ")
+    fileInventory = []
+    for root, dirs, files in os.walk(dirPath):
+        for file in files:
+            fileName = os.path.join(root, file)
+            fileProcessor = FileProcessor(fileName)
+            fileDetails = fileProcessor.GetFileMetaData()
+            fileInventory.append(fileDetails)
+    
+    table = PrettyTable()
+    table.field_names = ["Path", "FileSize", "Hash", "LastModified", "FileHeader", "Status", "Error"]
+    for file in fileInventory:
+        table.add_row([file["FilePath"], file["FileSize"], file["md5Hash"], file["LastModifiedTime"], file["FileHeader"], file["status"], file["errorInfo"]])
+    
+    print(table)
+    
+    # write the pretty table to a CSV file
+    with open('File-Processing_CSV.csv', 'w', newline='') as fileOut:
+        fileOut.write(table.get_csv_string())   
+    
+if __name__ == '__main__':
+    main()
