@@ -1,0 +1,38 @@
+'''
+Mike Sword
+01/28/2023
+Week Two Assignment #2 - File Processing
+'''
+#main
+import os
+
+uniqueWorms = set()
+triggerWord_1 = "worm"
+
+#file to process -- change as needed
+with open("redhat.txt", 'r') as logFile:
+    for eachLine in logFile:
+        eachLineLower = eachLine.lower()
+        fieldList = eachLineLower.split()
+        for eachField in fieldList:
+            '''
+            #testing of printing each field after made lowercase and split
+            print(eachField)
+            '''
+            if triggerWord_1 in eachField:
+                '''
+                #test printing each field that contains the word 'worm'
+                print(eachField)
+                '''
+                uniqueWorms.add(eachField)
+     
+'''
+#testing of sorting the unique worms and printing the results
+print(sorted(uniqueWorms))
+'''
+sorted_worm_set = sorted(uniqueWorms)      
+for eachEntry in sorted_worm_set:
+    print(eachEntry)
+    
+num_unique_worms = len(sorted_worm_set)
+print("\nThere were: ",num_unique_worms," unique worms found within the logfile. \n")
