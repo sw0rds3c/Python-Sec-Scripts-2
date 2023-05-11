@@ -1,6 +1,8 @@
 # Violent-Python
 CYBV-473
+
 University of Arizona
+
 Cyber Operations - Defense and Forensics
 
 1 - simple-string-search
@@ -16,11 +18,19 @@ Cyber Operations - Defense and Forensics
 6 - image-EXIF-extraction-using-PIL
 
 7 - 
+
 8 - 
+
 9 - 
+
 10 - 
+
 11 - 
+
 12 - 
+
 13 - 
+
 14 - 
+
 15 - 
