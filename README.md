@@ -1,9 +1,7 @@
 # Violent-Python
-CYBV-473
+CYBV-473 | Violent Python
 
-University of Arizona
-
-Cyber Operations - Defense and Forensics
+University of Arizona, Cyber Operations - Defense and Forensics
 
 1 - simple-string-search
 
