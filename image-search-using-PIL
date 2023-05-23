@@ -1,9 +1,3 @@
-'''
-Mike Sword
-02/11/2023
-Week Four Assignment #5 - Searching for Digital Images w/ Python and PIL
-'''
-
 ''' Import Standard Libraries '''
 import os
 ''' Import 3rd Party Libs '''
