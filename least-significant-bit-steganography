@@ -1,0 +1,91 @@
+''' 3rd Party Library '''
+from PIL import Image               # pip install pillow
+
+# Pixel tuple index
+RED   = 0
+GREEN = 1
+BLUE  = 2
+
+def hide_message_in_pixel(pixel, hide):
+    
+    redPx = pixel[RED]  # Extract the RGB
+    grnPx = pixel[GREEN]
+    bluPx = pixel[BLUE]
+    
+    # Print the Current Value of the Pixel
+    print("\nOrginal Pixel")
+    print("RED: ", '{:08b}'.format(redPx))
+    print("GRN: ", '{:08b}'.format(grnPx))
+    print("BLU: ", '{:08b}'.format(bluPx))    
+
+    if hide[0] == 0:
+        redPx = redPx & 0b11111110
+    else:
+        redPx = redPx | 0b00000001
+
+    if hide[1] == 0:
+        grnPx = grnPx & 0b11111110
+    else:
+        grnPx = grnPx | 0b00000001
+
+    if hide[2] == 0:
+        bluPx = bluPx & 0b11111110
+    else:
+        bluPx = bluPx | 0b00000001
+        
+    # Print the New Value of the Pixel
+    print("\nAlterned Pixel")
+    print("RED: ", '{:08b}'.format(redPx))
+    print("GRN: ", '{:08b}'.format(grnPx))
+    print("BLU: ", '{:08b}'.format(bluPx))    
+
+    return (redPx, grnPx, bluPx)
+
+
+''' Obtain the Basic image information '''
+try:
+    img = Image.open('monalisa.bmp')
+
+    pix = img.load()
+
+    # List of messages to hide in the image
+    messages = [
+                [0,0,0],
+                [0,1,0], 
+                [1,0,0], 
+                [1,1,0], 
+                [1,1,1]
+                ]
+
+    # Pixel to Modify
+    r = 36  # Row
+    c = 137  # Col
+    
+    messageCount = 0  
+    
+    for eachMessage in messages:
+
+        # Read the Pixel
+        pixel = pix[c, r]
+        
+        print("\nThe Message: ", messages[messageCount])
+        print("message count: ", messageCount)
+        print("column: ", c)
+        print("row: ", r)        
+        
+        pixel = hide_message_in_pixel(pixel, messages[messageCount])
+        pix[c, r] = pixel
+        
+        r += 1
+        c += 1
+        messageCount += 1
+        
+        print("\n", "_"*40)
+
+    # Save the changed Pixels
+    img.save('monaLisaTest.bmp')
+
+    print("\nMultiple Pixel St3g0 Done")
+
+except Exception as err:
+    print("St3g0 Failed: ", str(err))
