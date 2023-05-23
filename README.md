@@ -25,8 +25,14 @@ CYBV-473 | Violent Python
 
 12 - python-packet-sniffer
 
-13 - 
+13 - python-pcap-analysis
 
-14 - 
+14 - least-significant-bit-steganography && finding-first-pixel-for-change
 
-15 - 
+15 - natural-language-processing
+
+16 - mp3-id3-header-extraction
+
+17 - virus-total-client
+
+18 - website-forensics-nlp+ ***showcase***
