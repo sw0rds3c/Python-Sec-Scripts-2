@@ -1,0 +1,49 @@
+import socket       # import Python Standard Socket Library
+import sys
+import hashlib  # Python standard library hashlib
+
+print("Server Starting up\n")
+    
+try: 
+    
+    serverSocket = socket.socket()      # Create Socket for listening
+    
+    localHost = socket.gethostname()    # Get my local host address
+    
+    localPort = 5555                    # Specify a local Port 
+                                        # to accept connections on
+    
+    serverSocket.bind((localHost, localPort))  # Bind mySocket to localHost
+    
+    serverSocket.listen(1)              # Listen for connections
+
+    print('\nWaiting for Connection Request')    
+    
+    ''' Wait for a connection request
+        Note this is a synchronous Call meaning the program will halt until
+        a connection is received.  Once a connection is received
+        we will accept the connection and obtain the 
+        ipAddress of the connecting computer
+    '''
+    
+    conn, client = serverSocket.accept()
+    
+    
+    print("\nConnection Received from Client: ", conn, client)
+    
+    while True:
+        buffer = conn.recv(2048)  # Wait for Data
+        print("\nThe message from the client is: ", buffer)
+        
+        if b'exit' in buffer.lower():
+            print("Server Terminated by User")
+            break
+        
+        md5Obj = hashlib.md5()
+        md5Obj.update(buffer)
+        hexDigest = md5Obj.hexdigest()
+        msgBytes = bytes(str(hexDigest).encode("utf-8"))  # Convert string to bytes
+        conn.sendall(msgBytes)  # Send the hash back to the client        
+    
+except Exception as err:
+    sys.exit(str(err))
