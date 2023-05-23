@@ -1,11 +1,4 @@
-'''
-Mike Sword
-01/28/2023
-Week Two Assignment #3 - File Processing
-'''
-
 ''' STANDARD LIBRARIES '''
-
 import os       # File System Methods
 import hashlib  # Python standard library hashlib
 
