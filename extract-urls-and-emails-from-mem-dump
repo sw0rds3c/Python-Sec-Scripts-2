@@ -1,0 +1,45 @@
+''' LIBRARY IMPORT SECTION '''
+import sys
+import re
+from binascii import hexlify
+
+'''Main Function'''
+def main():
+    
+    CHUNK_SIZE = 2048
+    
+    ePatt = re.compile(b'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}')
+    uPatt = re.compile(b'\w+:\/\/[\w@][\w.:@]+\/?[\w.\.?=%&=\-@$,]*')
+    
+    emailList = []
+    urlList = []
+    
+    with open("mem.raw", "rb") as binaryFile_In:
+        while True:
+            chunk = binaryFile_In.read(CHUNK_SIZE)
+            if chunk:
+                emails = ePatt.findall(chunk)
+                urls = uPatt.findall(chunk)
+            
+                for eachEmail in emails:
+                        emailList.append(eachEmail)
+                        
+                for eachURL in urls:
+                        urlList.append(eachURL)
+                        
+            else:
+                break            
+    
+    print("\nPossible e-mails:\n")
+    for eachPossibleEmail in emailList:
+        print(eachPossibleEmail)
+            
+    print("\nPossible URLs:\n")
+    for eachPossibleURL in urlList:
+        print(eachPossibleURL)    
+
+
+#call main
+if __name__ == "__main__":
+    
+    main()
