@@ -13,17 +13,17 @@ CYBV-473 | Violent Python
 
 6 - image-EXIF-extraction-using-PIL
 
-7 - 
+7 - extract-urls-and-emails-from-mem-dump
 
-8 - 
+8 - extract-strings-from-memdump
 
-9 - 
+9 - webscraping-with-beautifulSoup
 
-10 - 
+10 - tcp-server
 
-11 - 
+11 - tcp-client
 
-12 - 
+12 - python-packet-sniffer
 
 13 - 
 
