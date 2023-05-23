@@ -1,0 +1,93 @@
+''' LIBRARY IMPORT SECTION '''
+import os                     # Python Standard Library : Operating System Methods
+import sys                    # Python Standard Library : System Methods
+import re                     # Python Standard Library : Regular Expressions
+import csv                    # Python Standard Library : Comma Seperated Value
+from binascii import hexlify  # Python Standard Library : Read Binary
+from datetime import datetime # Python Standard Library : Datetime Method from Standard Library
+
+'''3rd Party Lib'''
+from prettytable import PrettyTable     # py -3 -m pip install -U prettytable
+
+'''Main Function'''
+def main():
+    
+    print("Script Started", str(datetime.now()))
+    
+    # File Chunk Size
+    CHUNK_SIZE = 2048
+    
+    # regular expressions
+    
+    wPatt = re.compile(b'[a-zA-Z]{5,15}') 
+    
+    wordList = []
+    
+    resultTable = PrettyTable(["String", "Occurences"])
+    
+    with open("mem.raw", "rb") as binaryFile_In:
+        while True:
+            chunk = binaryFile_In.read(CHUNK_SIZE)
+            
+            if chunk:
+                
+                words = wPatt.findall(chunk)
+                
+                for eachWord in words:
+                    wordList.append(eachWord)
+            
+            else:
+                break
+    '''
+        stringList = wordList.split()
+    ''' 
+        
+    stringDictionary = {}
+    
+    for eachWord in wordList:
+        
+        lowerCaseString = eachWord.lower()
+        
+        try:
+            occurrances = stringDictionary[lowerCaseString]
+            occurrances += 1
+            stringDictionary[lowerCaseString] = occurrances
+        except:
+            stringDictionary[lowerCaseString] = 1
+    
+    firstFiveList = list(stringDictionary.items())[0:5]
+    lastFiveList  = list(stringDictionary.items())[-5:]
+    
+    print("FIRST FIVE:", firstFiveList)
+    print("LAST FIVE: ", lastFiveList)
+    
+    allStringsList = list(stringDictionary.items())
+    
+    allStringsList.sort(key = lambda x: x[1], reverse=True)
+    print('\n', allStringsList[:10])
+    print('\n', allStringsList[-10:])
+    
+    print("\nFirst 100")
+    for eachEntry in allStringsList[:100]:
+        print(eachEntry)
+        
+    print("\nLast 100")
+    for eachEntry in allStringsList[-100:]:
+        print(eachEntry)
+        
+    for eachEntry in stringDictionary:
+        resultTable.add_row([eachEntry, stringDictionary[eachEntry]])
+    
+    print(resultTable.get_string(sortby="Occurences", reversesort=True))
+    
+    
+    # write the data to a csv file
+    with open('string_extract_sorted.csv', 'w', newline='') as fileOut:
+        fileOut.write(resultTable.get_string(sortby="Occurences", reversesort=True))    
+    
+    print("\nScript Finished", str(datetime.now()), "\n")
+    
+#call main
+if __name__ == "__main__":
+        
+    main()
