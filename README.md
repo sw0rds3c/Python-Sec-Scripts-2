@@ -1,5 +1,4 @@
-# Violent-Python
-CYBV-473 | Violent Python
+# Python Sec Scripts 2
 
 1 - simple-string-search
 
