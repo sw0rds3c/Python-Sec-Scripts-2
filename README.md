@@ -1,8 +1,6 @@
 # Violent-Python
 CYBV-473 | Violent Python
 
-University of Arizona, Cyber Operations - Defense and Forensics
-
 1 - simple-string-search
 
 2 - file-processing_unique-worms-in-logfile
