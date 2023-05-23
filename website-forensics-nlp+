@@ -1,0 +1,317 @@
+# Python Standard Libaries
+import requests                         # Python Standard Library for url requests
+import re                               # Python regular expression library
+import os
+from datetime import datetime
+from prettytable import PrettyTable
+from nltk import pos_tag, word_tokenize
+
+# Python 3rd Party Libraries
+from bs4 import BeautifulSoup           # 3rd Party BeautifulSoup Library - pip install Beautifulsoup4
+
+IMG_SAVE = "./IMAGES/"  # Directory to store images
+# PARTS of SPEECH Lookup
+POSTAGS = {
+        'CC':   'conjunction',
+        'CD':   'CardinalNumber',
+        'DT':   'Determiner',
+        'EX':   'ExistentialThere',
+        'FW':   'ForeignWord',
+        'IN':   'Preposition',
+        'JJ':   'Adjective',
+        'JJR':  'AdjectiveComparative',
+        'JJS':  'AdjectiveSuperlative',
+        'LS':   'ListItem',
+        'MD':   'Modal',
+        'NN':   'Noun',
+        'NNS':  'NounPlural',
+        'NNP':  'ProperNounSingular',
+        'NNPS': 'ProperNounPlural',
+        'PDT':  'Predeterminer',
+        'POS':  'PossessiveEnding',
+        'PRP':  'PersonalPronoun',
+        'PRP$': 'PossessivePronoun',
+        'RB':   'Adverb',
+        'RBR':  'AdverbComparative',
+        'RBS':  'AdverbSuperlative',
+        'RP':   'Particle',
+        'SYM':  'Symbol',
+        'TO':   'to',
+        'UH':   'Interjection',
+        'VB':   'Verb',
+        'VBD':  'VerbPastTense',
+        'VBG':  'VerbPresentParticiple',
+        'VBN':  'VerbPastParticiple',
+        'VBP':  'VerbNon3rdPersonSingularPresent',
+        'VBZ':  'Verb3rdPersonSingularPresent',
+        'WDT':  'WhDeterminer',
+        'WP':   'WhPronoun',
+        'WP$':  'PossessiveWhPronoun',
+        'WRB':  'WhAdverb'
+        }
+
+# Create the directory if necessary
+if not os.path.exists(IMG_SAVE):
+    os.makedirs(IMG_SAVE)
+    
+pageLinks = set()
+imageLinks   = set()
+phone_numbers = set()
+zip_codes = set()
+
+#tables
+table1 = PrettyTable(["URLs"])
+table2 = PrettyTable(["Unique Vocabulary"])
+table3 = PrettyTable(["All Verbs"])
+table4 = PrettyTable(["All Nouns"])
+table5 = PrettyTable(["Unique Phone #'s"])
+table6 = PrettyTable(["Unique Zip Codes"])
+table7 = PrettyTable(["Unique Image URLs"])
+
+def author():
+    print("This Script was created by Mike Sword for Professor Hosmer's Class -- CYBV 473 \n")
+
+#finding links
+def RecurseURL(newURL, baseURL, local):
+    '''
+    print("Scanning: ", newURL, 'for links.\n')
+    '''
+    try:
+        page = requests.get(newURL)                         # retrieve page from chosen website
+        soup = BeautifulSoup(page.text, 'html.parser')      # convert the page into soup
+
+        links = soup.findAll('a')   # Find all the possible links
+        if links:
+            for eachLink in links:
+                
+                newLink = eachLink.get('href') 
+                
+                if not newLink:
+                    continue
+                
+                if 'http' not in newLink:
+                    newLink = baseURL+newLink
+                    
+                if not local in newLink:
+                    continue   
+                
+                if newLink not in pageLinks: 
+                    # verify this is a true new link
+                    pageLinks.add(newLink)
+                    RecurseURL(newLink, baseURL, local)
+                    
+                else:
+                    continue
+                    
+    except Exception as err:
+        # display any errors
+        print(err)    
+
+#extracting any images from the links
+def ImageExtractor():
+    print("\nScanning links for any images.\n")
+    for eachLink in pageLinks:
+        # Process any images found
+        page = requests.get(eachLink)                         # retrieve a page from chosen website
+        soup = BeautifulSoup(page.text, 'html.parser')      # convert the page into soup        
+        images = soup.findAll('img')  # Find the image tags
+        for eachImage in images:      # Process and display each image
+            try:
+                imgURL = eachImage['src']
+                print("Processing Image:", imgURL, end="")
+                if imgURL[0:4] != 'http':       # If URL path is relative
+                    imgURL = eachLink+imgURL         # try prepending the base url
+                                
+                imageName = os.path.basename(imgURL)  # Get the basename 
+                imgOutputPath = IMG_SAVE+imageName    # Prepare the output path
+                
+                response = requests.get(imgURL)       # Get the image from the URL
+                imgContent = response.content
+                
+                with open(imgOutputPath, 'wb') as outFile:
+                    outFile.write(imgContent)
+                                
+                    # Save the image
+                    print("  >> Saved Image:", imgOutputPath, "\nfrom:", imgURL)
+                            
+            except Exception as err:
+                print(imgURL, err)
+                continue
+            
+    print("\nAny images found were dumped to the script's folder\n")
+    
+#listing image links
+def imageList():
+    '''
+    print("\nScanning links for images and their links.\n")\
+    '''
+    for eachLink in pageLinks:
+        # Process any images found
+        page = requests.get(eachLink)                         # retrieve a page from chosen website
+        soup = BeautifulSoup(page.text, 'html.parser')      # convert the page into soup        
+        images = soup.findAll('img')  # Find the image tags
+        for eachImage in images:      # Process and display each image
+            try:
+                imgURL = eachImage['src']
+                '''
+                print("\nProcessing Image:", imgURL, end="\n")
+                '''
+                if imgURL[0:4] != 'http':       # If URL path is relative
+                    imgURL = eachLink+imgURL         # try prepending the base url           
+                imageName = os.path.basename(imgURL)  # Get the basename
+                imageLinks.add(imgURL)
+                            
+            except Exception as err:
+                print("\n", imgURL, err)
+                continue
+    '''
+    print("Image Links are:\n", imageLinks)
+    '''
+        
+#getting the page's title
+def PageTitle(baseURL):
+    print("The title of the main-page is: ")
+    page = requests.get(baseURL)                         # retrieve a page from chosen website
+    soup = BeautifulSoup(page.text, 'html.parser')      # convert the page into soup
+    print(soup.title.string, "\n")
+    
+def pageContents_NLTK():
+    uniqueVocabulary = set()
+    verbs = set()
+    nouns = set()
+    for eachLink in pageLinks:
+        try:
+            '''
+            print("\nScanning link:", eachLink, "for content and words used.\n")
+            '''
+            page = requests.get(eachLink)
+            pageText = page.text
+            pageText = re.sub("[^a-zA-Z]"," ", pageText)
+            
+            engText = word_tokenize(pageText.lower())  # lower case all words
+            # Tag each word with its part of speech using the NLTK pos_tagger
+            tags = pos_tag(engText)
+            
+            uniqueVocabulary.update(word for word, _ in tags)  # set of unique words
+            verbs.update(word for word, pos in tags if pos.startswith('VB'))  # set of verbs
+            nouns.update(word for word, pos in tags if pos.startswith('NN'))  # set of nouns
+            
+        except Exception as err:
+            # Display any errors encountered
+            print(err)
+    
+    uniqueVocabulary = sorted(uniqueVocabulary)
+    verbs = sorted(verbs)
+    nouns = sorted(nouns)    
+    '''
+    print("Unique vocabulary:\n", uniqueVocabulary)
+    print("\nPossible verbs:\n", verbs)
+    print("\nPossible nouns:\n", nouns)
+    '''
+    #creating pretty tables for beautified output
+    #tbl 2
+    for eachEntry in uniqueVocabulary:
+        table2.add_row([eachEntry])
+    #tbl 3
+    for eachEntry in verbs:
+        table3.add_row([eachEntry])
+    #tbl 4
+    for eachEntry in nouns:
+        table4.add_row([eachEntry])    
+            
+def extract_zip_and_phone():
+    '''
+    print("\nLooking for phone numbers and zip codes\n")
+    '''
+    zip_patt = re.compile(r'\d{5}(?:-\d{4})?')
+    phone_patt = re.compile(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}')
+    
+    phone_numbers = set()
+    zip_codes = set()
+    
+    for eachLink in pageLinks:
+        try:
+            page = requests.get(eachLink)
+            pageText = page.text
+            
+            # Extract phone numbers
+            phone_numbers.update(phone_patt.findall(pageText))
+                    
+            # Extract zip codes
+            zip_codes.update(zip_patt.findall(pageText))
+                    
+        except Exception as err:
+            # Display any errors encountered
+            print(err)
+            
+    for eachEntry in phone_numbers:
+        table5.add_row([eachEntry])
+        
+    for eachEntry in zip_codes:
+        table6.add_row([eachEntry])    
+    '''
+    print("Phone number and zip code search complete.\n")
+    print("Phone numbers found:", phone_numbers)
+    print("\nZip codes found:", zip_codes)
+    '''
+
+#main
+def main():
+    
+    author()
+    
+    #keeping track of start time
+    start_time = datetime.now()
+    print("Script Start Time (GMT) = ", str(start_time), "\n")
+    
+    #sets URL and scope
+    baseURL     = 'https://casl.website/'                         #main URL to use
+    baseDomain  = 'https://casl.website/'
+    mustInclude  ='casl.website'                                  #for scope check
+    
+    #grabs all links that stay within scope
+    pageLinks.add(baseURL)
+    RecurseURL(baseURL, baseDomain, mustInclude)
+    for eachEntry in pageLinks:
+        table1.add_row([eachEntry])    
+    print("Unique URLs Discovered:")
+    print(table1.get_string(sortby="URLs"))
+    
+    #grabs all image URLs
+    imageList()
+    for eachEntry in imageLinks:
+        table7.add_row([eachEntry])
+    print("\nUnique Image URLs Discovered:")
+    print(table7.get_string(sortby="Unique Image URLs"))
+    
+    '''
+    ImageExtractor()
+    '''
+    
+    #grabs contents of pages and finds all vocab, verbs, and nouns
+    pageContents_NLTK()
+    print("\nUnique vocabulary:")
+    print(table2.get_string(sortby="Unique Vocabulary"))
+    print("\nPossible verbs:")
+    print(table3.get_string(sortby="All Verbs"))
+    print("\nPossible nouns:")
+    print(table4.get_string(sortby="All Nouns"))
+    
+    #finds all phone #'s and zip codes
+    extract_zip_and_phone()
+    print("\nPhone #'s Discovered:")
+    print(table5.get_string(sortby="Unique Phone #'s"))
+    print("\nZip Codes Discovered:")
+    print(table6.get_string(sortby="Unique Zip Codes"))   
+    
+    #keeping track of finish time and total time taken
+    finish_time = datetime.now()
+    print("\nScript Finishing Time (GMT) = ", str(finish_time))
+    total_time_taken = finish_time - start_time
+    print("Total Script Runtime = ", str(total_time_taken))    
+    
+    #done
+    print('\n\nScript Complete!')
+
+if __name__ == "__main__":
+    main()
