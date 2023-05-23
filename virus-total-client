@@ -1,0 +1,32 @@
+#Libraries
+import json
+import hashlib
+import os
+from virus_total_apis import PublicApi as VirusTotalPublicApi                #pip install virus_total_apis
+
+def VirusTotal():
+
+    # Obtain an API Key from Virus Total
+    #promot user for key
+    API_KEY = input('API Key for Virus Total: ')
+    # Set folder/path of files to scan
+    #prompt user for target path to scan
+    TARGET_FOLDER = input("Target Folder Path: ")
+    #var for virus total method
+    vt = VirusTotalPublicApi(API_KEY)
+    #main loop for grabbing files, hashing contents, uploading to virus total, and retreiving report
+    for file_name in os.listdir(TARGET_FOLDER):
+        file_path = os.path.join(TARGET_FOLDER, file_name)
+        if os.path.isfile(file_path):
+            with open(file_path, 'rb') as f:
+                file_content = f.read()
+            file_md5 = hashlib.md5(file_content).hexdigest()
+            response = vt.get_file_report(file_md5)
+            print('File Name:', file_name)
+            print('MD5 Hash:', file_md5)
+            print('VirusTotal Report:')
+            print(json.dumps(response, sort_keys=False, indent=4))
+            print('----------------------')         
+       
+if __name__ == '__main__':
+    VirusTotal()
