@@ -1,0 +1,174 @@
+import os       # Standard Library OS functions
+import sys
+import logging  # Standard Library Logging functions
+import nltk     # Import the Natural Language Toolkit
+#nltk.download('stopwords')
+from nltk.corpus import PlaintextCorpusReader   #Import the PlainTextCorpusReader Module
+from nltk.corpus import stopwords
+from time import sleep
+from prettytable import PrettyTable
+
+stopSet = set(stopwords.words('english'))
+    
+class classNLTKQuery:
+    
+    def __init__(self, thePath):
+        
+        # Validate the path is a directory
+        if not os.path.isdir(thePath):
+            self.status = False
+            print("Invalid Directory")
+            return
+
+        # Validate the path is readable
+        if not os.access(thePath, os.R_OK):
+            self.status = False
+            print("Invalid Credentials")
+            return 
+
+        # Attempt to Create a corpus with all .txt files found in the directory
+        try:
+
+            self.Corpus = PlaintextCorpusReader(thePath, '.*')
+            print ("Processing Files : ")
+            print (self.Corpus.fileids())
+            print ("Please wait ...")
+            self.rawText = self.Corpus.raw()
+            #print(self.rawText)
+            self.tokens = nltk.word_tokenize(self.rawText)
+            self.TextCorpus = nltk.Text(self.tokens)
+            self.status = True
+            #print(dir(self.TextCorpus))
+        except:
+            self.status = False
+
+    def printCorpusLength(self):
+        print ("\n\nCorpus Text Length: ", '{:,}'.format(len(self.rawText)))
+
+    def printTokensFound(self):
+        print ("\n\nTokens Found: ", '{:,}'.format(len(self.tokens)))
+
+    def printVocabSize(self):
+        print ("\n\nCalculating ...")
+        vocabularyUsed = set(self.TextCorpus)
+        vocabularySize = len(vocabularyUsed) 
+        print ("Vocabulary Size: ", '{:,}'.format(vocabularySize))
+    
+    def searchWordOccurrence(self):
+        myWord = input("\n\nEnter Search Word : ")
+        if myWord:
+            wordCount = self.TextCorpus.count(myWord)
+            print (myWord+" occured: ", wordCount, " times")
+        else:
+            print ("Word Entry is Invalid")    
+
+    def generateConcordance(self):
+        myWord = input("\n\nEnter word to Concord : ")
+        if myWord:
+            print ("Compiling First 100 Concordance Entries ...")
+            self.TextCorpus.concordance(myWord)         
+
+    def printWordIndex(self):
+        myWord = input("\n\nFind first occurrence of what Word? : ")
+        if myWord:
+            print("Searching for first occurrence of: ", myWord)
+            print(self.Corpus.words().index(myWord))
+
+    def printVocabulary(self):
+        print ("\n\nCompiling Vocabulary Frequencies")
+              
+        tbl = PrettyTable(["Vocabulary", "Occurs"])
+        words = [word for word in set(self.Corpus.words()) if len(word) >= 4 and word.isascii()]
+        for word in words:
+            tbl.add_row([word, self.Corpus.words().count(word)])
+        print(tbl.get_string(sortby="Occurs", reversesort=True))
+
+
+def printMenu():
+    
+    # Function to print the NLTK Query Option Menu
+    print("\n\n")
+    print ("========== NLTK Query Options =========")
+    print ("[1]    Print Length of Corpus")
+    print ("[2]    Print Number of Token Found")
+    print ("[3]    Print Vocabulary Size")
+    print ("[4]    Search for Word Occurrence")
+    print ("[5]    Generate Concordance")
+    print ("[6]    Print Word Index")
+    print ("[7]    Print Vocabulary")
+    print()
+    print ("[0]    Exit NLTK Experimentation")
+    print()
+  
+ # Function to obtain user input   
+def getUserSelection():
+    printMenu()
+    
+    while True:
+        try:
+            sel = input('Enter Selection (0-7) >> ')
+            menuSelection = int(sel)
+        except ValueError:
+            print ('Invalid input. Enter a value between 0-8.')
+            continue
+    
+        if not menuSelection in range(0, 9):
+            print ('Invalid input. Enter a value between 0 - 8.')
+            continue
+    
+        return menuSelection
+
+if __name__ == '__main__':
+
+    print ("Welcome to the NLTK Query Experimentation")
+    print ("Please wait loading NLTK ... \n")
+    
+    print ("Input full path name where intended corpus file or files are stored")
+    print ("Format for Windows e.g. ./CORPUS \n")
+    
+    userSpecifiedPath = input("Path: ") 
+    
+    # Attempt to create a text Corpus
+    oNLTK = classNLTKQuery(userSpecifiedPath)
+    
+    if oNLTK.status:
+        
+        menuSelection = -1
+        
+        while menuSelection != 0:
+                
+            menuSelection = getUserSelection()        
+            
+            if menuSelection == 1:
+                oNLTK.printCorpusLength()
+            
+            elif menuSelection == 2:
+                oNLTK.printTokensFound()
+    
+            elif menuSelection == 3:
+                oNLTK.printVocabSize()
+    
+            elif menuSelection == 4:         
+                oNLTK.searchWordOccurrence()      
+    
+            elif menuSelection == 5:    
+                oNLTK.generateConcordance()        
+    
+            elif menuSelection == 6:    
+                oNLTK.printWordIndex()
+    
+            elif menuSelection == 7:    
+                oNLTK.printVocabulary()
+                
+            elif menuSelection == 0:    
+                print("Goodbye")
+                print()
+            
+            else:
+                print ("unexpected error condition")
+                menuSelection = 0
+
+            sleep(2)
+    
+    else:
+            print ("Closing NLTK Query Experimentation")
