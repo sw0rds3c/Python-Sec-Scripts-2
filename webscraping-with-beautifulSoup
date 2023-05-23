@@ -1,0 +1,104 @@
+#Standard Lib
+import requests
+import re
+import os
+
+#3rd Party Lib
+from bs4 import BeautifulSoup
+
+#global var
+pageLinks = set()
+
+#finding links
+def RecurseURL(newURL, base, local):
+    
+    try:
+        page = requests.get(newURL)                         # retrieve page from chosen website
+        soup = BeautifulSoup(page.text, 'html.parser')      # convert the page into soup
+
+        links= soup.findAll('a')   # Find all possible links
+        if links:
+            for eachLink in links:
+                
+                newLink = eachLink.get('href') 
+                
+                if not newLink:
+                    continue
+                
+                if 'http' not in newLink:
+                    newLink = base+newLink
+                    
+                if not local in newLink:
+                    continue   
+                
+                if newLink not in pageLinks: 
+                    # verify this is a true new link
+                    pageLinks.add(newLink)              # add the link to our set of unique links 
+                    RecurseURL(newLink, base, local)           # Process this link
+                else:
+                    continue
+                    
+    except Exception as err:
+        # display any errors
+        print(err)
+
+#extracting any images from the main link
+def ImageExtractor(baseURL):
+    
+    page = requests.get(baseURL)                         # retrieve a page from chosen website
+    soup = BeautifulSoup(page.text, 'html.parser')      # convert the page into soup    
+    images = soup.findAll('img')  # Find the image tags
+    
+    for eachImage in images:      # Process and display each image
+        
+        try:
+            imgURL = eachImage['src']
+            print(imgURL)
+            if imgURL[0:4] != 'http':       # If URL path is relative
+                imgURL = baseURL+imgURL         # try prepending the base url
+                    
+            response = requests.get(imgURL)                 # Get the image from the URL
+            imageName = os.path.basename(imgURL)
+                    
+            with open(imageName, 'wb') as outFile:          #dump each image found into folder with script
+                outFile.write(response.content)
+                        
+        except Exception as err:
+            print(imgURL, err)
+            continue
+        
+#getting the page's title
+def PageTitle(baseURL):
+    page = requests.get(baseURL)                         # retrieve a page from chosen website
+    soup = BeautifulSoup(page.text, 'html.parser')      # convert the page into soup
+    print(soup.title.string, "\n")
+
+#main script
+def main(): 
+
+    baseURL     = 'https://casl.website/'                 #main URL to use
+    baseDomain  = 'https://casl.website/'
+    mustInclude  ='casl'                                  #for scope check
+
+    print("The title of the main-page is: ")
+    PageTitle(baseURL)
+    
+    pageLinks.add(baseURL)
+    
+    print("Scanning: ", baseURL, 'for any links.\n')
+    RecurseURL(baseURL, baseDomain, mustInclude)
+    
+    print("Scanning for URLs Complete\n")
+    print("Unique URLs Discovered\n")
+    
+    for eachEntry in pageLinks:
+        print(eachEntry)
+        
+    print("\nScanning: ", baseURL, 'for any images.\n')
+    ImageExtractor(baseURL)
+    print("\nImages found at: ", baseURL, " were dumped to the script's folder\n")
+    
+    print('\n\nScript Complete')
+
+if __name__ == "__main__":
+    main()
